@@ -1,74 +1,58 @@
 // ==UserScript==
 // @name         Page Enhancer
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Improve browsing experience
 // @author       You
 // @match        *://misskon.com/*
 // @match        *://*.misskon.com/*
 // @grant        none
 // @run-at       document-start
-// ==UserScript==
+// ==/UserScript==
 
 (function () {
     'use strict';
 
-    // 已知的广告域名黑名单
-    const AD_DOMAINS = [
-        'hivoppztet.com',
-    ];
+    // 记录用户真正点击的链接
+    let allowedUrl = null;
+    let clickTime = 0;
 
     // 保存原始的 window.open
     const originalOpen = window.open;
 
-    // 判断是否是广告URL
-    function isAdUrl(url) {
-        if (!url) return false;
-
-        // 1. 检查已知广告域名
-        for (const domain of AD_DOMAINS) {
-            if (url.includes(domain)) return true;
-        }
-
-        // 2. 检查随机字符域名模式（如 hivoppztet.com 这种无意义字符串）
-        // 匹配：8-12个连续小写字母组成的域名
-        if (/^https?:\/\/[a-z]{8,12}\.(com|net|org|xyz|top|click|info)/i.test(url)) {
-            return true;
-        }
-
-        // 3. 非 misskon.com 的外部链接，在点击站内链接时触发的，视为广告
-        if (!url.includes('misskon.com')) {
-            return true;
-        }
-
-        return false;
-    }
-
-    // 重写 window.open，阻止广告弹窗
+    // 重写 window.open
     window.open = function (url, target, features) {
-        if (isAdUrl(url)) {
-            console.log('[MissKon广告拦截] 已阻止弹窗:', url);
-            return null;
+        const now = Date.now();
+
+        // 只有在用户刚刚点击（500ms内）且URL与点击的链接匹配时才允许
+        if (allowedUrl && (now - clickTime) < 500) {
+            // URL完全匹配，或者是用户点击链接的一部分
+            if (url === allowedUrl || (url && allowedUrl.includes(url)) || (url && url.includes(allowedUrl))) {
+                console.log('[PE] 允许:', url);
+                return originalOpen.apply(this, arguments);
+            }
         }
-        return originalOpen.apply(this, arguments);
+
+        // 其他情况全部阻止
+        console.log('[PE] 已阻止:', url);
+        return null;
     };
 
-    // 监听点击事件
+    // 监听点击事件，记录用户点击的链接
     document.addEventListener('click', function (e) {
         const link = e.target.closest('a');
         if (link && link.href) {
-            userClickedLink = true;
-            clickedLinkHref = link.href;
+            allowedUrl = link.href;
+            clickTime = Date.now();
 
-            // 短暂延迟后重置状态
+            // 500ms后清除，防止被利用
             setTimeout(() => {
-                userClickedLink = false;
-                clickedLinkHref = null;
-            }, 100);
+                allowedUrl = null;
+            }, 500);
         }
     }, true);
 
-    // 阻止通过创建隐藏链接并触发点击的方式打开广告
+    // 阻止通过隐藏链接打开广告
     const originalCreateElement = document.createElement.bind(document);
     document.createElement = function (tagName) {
         const element = originalCreateElement(tagName);
@@ -76,36 +60,16 @@
         if (tagName.toLowerCase() === 'a') {
             const originalClick = element.click;
             element.click = function () {
-                // 检查是否是程序化触发的点击（用于打开广告）
-                if (!element.isConnected || element.style.display === 'none' || element.offsetParent === null) {
-                    console.log('[MissKon广告拦截] 已阻止隐藏链接点击:', element.href);
+                if (!element.isConnected || element.style.display === 'none') {
+                    console.log('[PE] 阻止隐藏链接:', element.href);
                     return;
                 }
                 return originalClick.apply(this, arguments);
             };
         }
-
         return element;
     };
 
-    // 移除可能的广告事件监听器
-    window.addEventListener('DOMContentLoaded', function () {
-        // 移除 body 上的可疑点击事件
-        const body = document.body;
-        if (body) {
-            const clone = body.cloneNode(false);
-            while (body.firstChild) {
-                clone.appendChild(body.firstChild);
-            }
-            body.parentNode.replaceChild(clone, body);
-        }
-    });
-
-    // 阻止 beforeunload 中的广告逻辑
-    window.addEventListener('beforeunload', function (e) {
-        // 不做任何事情，只是阻止可能的广告逻辑
-    }, true);
-
-    console.log('[MissKon广告拦截器] 已启动');
+    console.log('[PE] ready');
 
 })();
