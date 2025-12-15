@@ -1,0 +1,28 @@
+! --- Misskon.com 终极白名单 (基于你的抓包) ---
+
+! 1. 【核心逻辑】禁止该网站加载一切第三方 JS（宁可杀错，不可放过）
+||misskon.com^$script,third-party
+
+! 2. 【白名单】放行 Disqus 评论系统全家桶
+! 因为你抓到的 glitter.services.disqus.com 属于 disqus.com，所以下面第一条规则就已经包含它了
+@@||disqus.com^$script,domain=misskon.com
+@@||disquscdn.com^$script,domain=misskon.com
+@@||services.disqus.com^$script,domain=misskon.com
+
+! 3. 【白名单】放行 Google 基础服务 (字体/API/验证码)
+@@||google.com^$script,domain=misskon.com
+@@||gstatic.com^$script,domain=misskon.com
+@@||apis.google.com^$script,domain=misskon.com
+
+! 4. 【备用白名单】常见的公共库 (防止某些插件失效，推荐加上)
+@@||cdnjs.cloudflare.com^$script,domain=misskon.com
+@@||code.jquery.com^$script,domain=misskon.com
+@@||wp.com^$script,domain=misskon.com
+
+! 5. 【补刀】针对性代码注入 (防止漏网之鱼执行)
+! 告诉浏览器 "广告已经加载过了"，骗过脚本
+misskon.com#%#//scriptlet("set-constant", "zfgloadedbanner", "true")
+! 阻止读取关键变量
+misskon.com#%#//scriptlet("abort-on-property-read", "_cl_ab")
+
+! --- End ---
