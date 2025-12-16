@@ -1,0 +1,32 @@
+! Title: MissKon 广告屏蔽规则
+! Description: 专门针对 misskon.com 的广告过滤规则
+! Homepage: https://github.com/Anani6/SRule
+! Last modified: 2024-12-16
+! License: MIT
+
+! ===== 已知广告提供商 =====
+||magsrv.com^
+||a.magsrv.com^
+
+! ===== 常见成人网站广告域名模式 =====
+||exoclick.com^
+||exosrv.com^
+||trafficjunky.com^
+||traffichaus.com^
+||juicyads.com^
+||plugrush.com^
+||tsyndicate.com^
+||realsrv.com^
+
+! ===== 可疑路径模式 =====
+/ad-provider.js
+/pop.js
+/popunder.js
+/push.js
+
+! ===== MissKon 站内广告元素 =====
+misskon.com###adcontainer
+misskon.com##.ads
+misskon.com##.ad-wrapper
+misskon.com##[id*="ad-"]
+misskon.com##[class*="popup"]
