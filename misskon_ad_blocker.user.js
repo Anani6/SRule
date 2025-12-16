@@ -1,16 +1,21 @@
 // ==UserScript==
 // @name         MissKon 智能广告拦截器
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      2.1
 // @description  基于行为特征拦截 misskon.com 的动态广告脚本，无需维护域名黑名单
 // @author       You
 // @match        *://misskon.com/*
 // @match        *://*.misskon.com/*
+// @match        https://misskon.com/*
+// @match        https://*.misskon.com/*
 // @run-at       document-start
 // @grant        none
+// @noframes     false
+// @compatible   chrome
+// @compatible   safari
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // ==================== 配置 ====================
@@ -65,7 +70,7 @@
     function isWhitelisted(url) {
         try {
             const hostname = new URL(url).hostname;
-            return CONFIG.whitelist.some(domain => 
+            return CONFIG.whitelist.some(domain =>
                 hostname === domain || hostname.endsWith('.' + domain)
             );
         } catch {
@@ -92,7 +97,7 @@
         try {
             const hostname = new URL(url).hostname;
             const parts = hostname.split('.');
-            
+
             // 获取主域名部分（去掉 www. 和顶级域名）
             let mainDomain = parts[0];
             if (mainDomain === 'www' && parts.length > 2) {
@@ -120,8 +125,8 @@
             }
 
             // 规则3: 包含多个常见英语单词拼接（如 bankingbloatedcaptive）
-            const commonWords = ['banking', 'bloated', 'captive', 'bobsled', 'domestic', 
-                                 'glandular', 'click', 'track', 'serve', 'push', 'pop'];
+            const commonWords = ['banking', 'bloated', 'captive', 'bobsled', 'domestic',
+                'glandular', 'click', 'track', 'serve', 'push', 'pop'];
             let matchCount = 0;
             for (const word of commonWords) {
                 if (mainDomain.includes(word)) matchCount++;
@@ -141,7 +146,7 @@
      */
     function shouldBlock(url) {
         if (!url || typeof url !== 'string') return false;
-        
+
         // 相对路径通常是安全的（来自同源）
         if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//')) {
             return false;
@@ -177,7 +182,7 @@
 
     // 1. 拦截 window.open（阻止弹窗广告）
     const originalWindowOpen = window.open;
-    window.open = function(url, ...args) {
+    window.open = function (url, ...args) {
         // 允许用户主动触发的行为（如点击下载链接）
         // 但阻止自动弹出的广告窗口
         if (url && shouldBlock(url)) {
@@ -194,13 +199,13 @@
 
     // 2. 拦截动态创建的 script 标签
     const originalCreateElement = document.createElement.bind(document);
-    document.createElement = function(tagName, options) {
+    document.createElement = function (tagName, options) {
         const element = originalCreateElement(tagName, options);
-        
+
         if (tagName.toLowerCase() === 'script') {
             // 拦截 setAttribute
             const originalSetAttribute = element.setAttribute.bind(element);
-            element.setAttribute = function(name, value) {
+            element.setAttribute = function (name, value) {
                 if (name.toLowerCase() === 'src' && shouldBlock(value)) {
                     return; // 静默忽略
                 }
@@ -225,7 +230,7 @@
         // 拦截 iframe（广告常用 iframe）
         if (tagName.toLowerCase() === 'iframe') {
             const originalSetAttribute = element.setAttribute.bind(element);
-            element.setAttribute = function(name, value) {
+            element.setAttribute = function (name, value) {
                 if (name.toLowerCase() === 'src' && shouldBlock(value)) {
                     return;
                 }
@@ -279,7 +284,7 @@
 
     // 4. 拦截 fetch 和 XMLHttpRequest（部分广告通过 AJAX 加载）
     const originalFetch = window.fetch;
-    window.fetch = function(url, ...args) {
+    window.fetch = function (url, ...args) {
         const urlString = typeof url === 'string' ? url : url?.url;
         if (urlString && shouldBlock(urlString)) {
             log('🚫 拦截 fetch:', urlString);
@@ -289,7 +294,7 @@
     };
 
     const originalXHROpen = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(method, url, ...args) {
+    XMLHttpRequest.prototype.open = function (method, url, ...args) {
         if (url && shouldBlock(url)) {
             log('🚫 拦截 XHR:', url);
             this._blocked = true;
@@ -298,7 +303,7 @@
     };
 
     const originalXHRSend = XMLHttpRequest.prototype.send;
-    XMLHttpRequest.prototype.send = function(...args) {
+    XMLHttpRequest.prototype.send = function (...args) {
         if (this._blocked) {
             return;
         }
