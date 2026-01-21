@@ -1,0 +1,12 @@
+! 选股通广告过滤规则
+! 更新日期: 2026-01-21
+! 适用于: AdGuard / uBlock Origin
+
+! 顶部横幅广告（轮播图推广）
+xuangutong.com.cn##.home-banner_1qW0G
+
+! 右侧"免费解锁"广告
+xuangutong.com.cn##.banner_mXhGe
+
+! 右下角浮动窗（二维码/月卡推广）
+xuangutong.com.cn##.xgb-tools
