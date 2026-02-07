@@ -1,0 +1,14 @@
+! 选股通广告过滤规则
+! 更新日期: 2026-01-21
+! 适用于: AdGuard / uBlock Origin
+! 
+! 说明: 使用前缀匹配选择器 [class^="xxx"] 以应对网站动态类名变化
+
+! 顶部横幅广告（轮播图推广）- 使用前缀匹配
+xuangutong.com.cn##div[class^="home-banner"]
+
+! 右侧"免费解锁"广告 - 使用前缀匹配
+xuangutong.com.cn##div[class^="banner_"]
+
+! 右下角浮动窗（二维码/月卡推广）
+xuangutong.com.cn##.xgb-tools
