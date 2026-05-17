@@ -1,7 +1,7 @@
 ! Title: MissKon 广告屏蔽规则
 ! Description: 专门针对 misskon.com 的广告过滤规则
 ! Homepage: https://github.com/Anani6/SRule
-! Last modified: 2024-12-16
+! Last modified: 2026-05-17
 ! License: MIT
 
 ! ===== 已知广告提供商 =====
@@ -30,3 +30,9 @@ misskon.com##.ads
 misskon.com##.ad-wrapper
 misskon.com##[id*="ad-"]
 misskon.com##[class*="popup"]
+
+! ===== MissKon 图片清晰度修正 =====
+! 移除站点主题对缩略图和正文图添加的轻微模糊/调色滤镜
+misskon.com#$#.post-thumbnail img { filter: none !important; }
+misskon.com#$#.entry img { filter: none !important; }
+misskon.com#$#.post-thumbnail a:hover img { opacity: 1 !important; }
